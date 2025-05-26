@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteLux - Catatan Serbaguna Harianmu</title>
+    <meta name="description" content="NoteLux adalah aplikasi catatan serbaguna Harianmu. Catat harian, hutang-piutang, dan ide penting Anda dengan mudah, praktis, dan aman.">
+    <meta name="keywords" content="catatan, notes, aplikasi catatan, hutang piutang, catatan harian, luxury notes, pencatat online">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="NoteLux - Catatan Serbaguna Harianmu">
+    <meta property="og:description" content="web catatan harian, hutang/piutang, dan bebas. Praktis dan aman!">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://catatan.notelux.my.id/">
+    <meta property="og:image" content="https://raw.githubusercontent.com/fadzdigital/Previes_NoteLux/main/NoteLux1.jpg">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NoteLux - Catatan Serbaguna Premium">
+    <meta name="twitter:description" content="Catatan harian, hutang/piutang, dan bebas. Praktis dan aman!">
+    <meta name="twitter:image" content="https://raw.githubusercontent.com/fadzdigital/Previes_NoteLux/main/NoteLux1.jpg">
+
+    <!-- Favicon & App Icons from GitHub RAW -->
+    <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/fadzdigital/fav_noteLux/main/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/fadzdigital/fav_noteLux/main/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://raw.githubusercontent.com/fadzdigital/fav_noteLux/main/favicon-16x16.png">
+    <link rel="manifest" href="https://raw.githubusercontent.com/fadzdigital/fav_noteLux/main/site.webmanifest">
+    <link rel="shortcut icon" href="https://raw.githubusercontent.com/fadzdigital/fav_noteLux/main/favicon.ico">
+
+    <!-- Fonts & CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="elegant.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="about-btn" onclick="openAboutModal()">
+                <i class="fas fa-info-circle"></i> Tentang
+            </div>
+            <h1><i class="fas fa-book-open"></i> NoteLux</h1>
+            <p class="subtitle">Catatan untuk Segala Harianmu</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="dailyCount">0</div>
+                <div class="stat-label">Catatan Harian</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="debtCount">0</div>
+                <div class="stat-label">HuTangan</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="freeCount">0</div>
+                <div class="stat-label">Catatan Bebas</div>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="showSection('daily')">
+                <i class="fas fa-calendar-day"></i> Catatan Harian
+            </div>
+            <div class="nav-tab" onclick="showSection('debt')">
+                <i class="fas fa-money-bill-wave"></i> Hutang/Piutang
+            </div>
+            <div class="nav-tab" onclick="showSection('free')">
+                <i class="fas fa-sticky-note"></i> Catatan Bebas
+            </div>
+        </div>
+
+        <!-- Daily Notes Section -->
+        <div id="daily" class="content-section active">
+            <div class="card">
+                <h2><i class="fas fa-calendar-plus"></i> Add Catatan Harian</h2>
+                <form id="dailyForm">
+                    <div class="form-group">
+                        <label for="dailyDate">Tanggal:</label>
+                        <input type="date" id="dailyDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dailyTitle">Judul:</label>
+                        <input type="text" id="dailyTitle" placeholder="Masukkan judul catatan..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dailyContent">Isi Catatan:</label>
+                        <textarea id="dailyContent" placeholder="Tulis catatan harian Anda..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Simpan Catatan
+                    </button>
+                </form>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="dailySearch" placeholder="Cari catatan harian...">
+            </div>
+
+            <div id="dailyNotes" class="notes-grid"></div>
+        </div>
+
+        <!-- Debt Notes Section -->
+        <div id="debt" class="content-section">
+            <div class="card">
+                <h2><i class="fas fa-plus-circle"></i> Add Catatan Hutang/Piutang</h2>
+                <form id="debtForm">
+                    <div class="form-group">
+                        <label for="debtType">Jenis:</label>
+                        <select id="debtType" required>
+                            <option value="">Pilih jenis...</option>
+                            <option value="hutang">Hutang (Saya berhutang)</option>
+                            <option value="piutang">Piutang (Saya berpiutang)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="debtPerson">Nama Orang:</label>
+                        <input type="text" id="debtPerson" placeholder="Nama orang..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="debtAmount">Jumlah:</label>
+                        <input type="number" id="debtAmount" placeholder="Jumlah uang..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="debtDesc">Keterangan:</label>
+                        <textarea id="debtDesc" placeholder="Keterangan tambahan..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Simpan Catatan
+                    </button>
+                </form>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="debtSearch" placeholder="Cari catatan hutang/piutang...">
+            </div>
+
+            <div id="debtNotes" class="notes-grid"></div>
+        </div>
+
+        <!-- Free Notes Section -->
+        <div id="free" class="content-section">
+            <div class="card">
+                <h2><i class="fas fa-plus-square"></i> Add Catatan Bebas</h2>
+                <form id="freeForm">
+                    <div class="form-group">
+                        <label for="freeCategory">Kategori:</label>
+                        <input type="text" id="freeCategory" placeholder="Contoh: Belanja, To-Do, Ide Bisnis..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="freeTitle">Judul:</label>
+                        <input type="text" id="freeTitle" placeholder="Judul catatan..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="freeContent">Isi Catatan:</label>
+                        <textarea id="freeContent" placeholder="Tulis catatan Anda..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Simpan Catatan
+                    </button>
+                </form>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="freeSearch" placeholder="Cari catatan bebas...">
+            </div>
+
+            <div id="freeNotes" class="notes-grid"></div>
+        </div>
+
+        <footer>
+            <p><i class="fas fa-bolt"></i> Dibuat Tertata dan Efisien</p>
+            <p>© 2025 NoteLux — by <a href="https://wa.me/6285727035336" target="_blank" style="color: #fff; text-decoration: underline;">fadzdigital</a></p>
+        </footer>
+    </div>
+
+    <!-- Modal About -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content about-modal">
+            <span class="close" onclick="closeAboutModal()">&times;</span>
+            <h2><i class="fas fa-shield-alt"></i> Tentang NoteLux </h2>
+            <p>
+                <strong>NoteLux</strong> adalah website catatan serbaguna yang mengutamakan keamanan dan privasi data Anda! 
+                Semua catatan hanya disimpan di perangkat Anda (localStorage) dan tidak pernah diunggah ke server.
+            </p>
+            <ul>
+                <li>🔒 <strong>Privasi:</strong> Catatan hanya tersimpan di perangkat Anda.</li>
+                <li>☁️ <strong>Tidak ada server:</strong> Data tidak dikirim ke internet.</li>
+                <li>👀 <strong>Hanya Anda yang bisa mengakses catatan Anda.</strong></li>
+                <li>🚀 <strong>Bisa digunakan offline tanpa perlu akun.</strong></li>
+                <li>📱 <strong>Mudah digunakan di semua perangkat.</strong></li>
+            </ul>
+            <p style="margin-top: 20px; color: #667eea; font-weight: 500;">
+                Nikmati pengalaman mencatat yang aman, dan praktis dengan NoteLux!
+            </p>
+        </div>
+    </div>
+
+    <button class="floating-btn" onclick="scrollToTop()" title="Kembali ke atas">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+<script src="noteboox.js"></script>
+</body>
+</html>
