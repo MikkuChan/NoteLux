@@ -145,17 +145,10 @@ function escapeHTML(str) {
     });
 }
 
-// Function untuk escape string agar aman digunakan dalam attribute HTML
 function escapeForAttribute(str) {
     if (!str) return '';
-    return String(str)
-        .replace(/\\/g, '\\\\')  // escape backslash
-        .replace(/'/g, "\\'")    // escape single quote
-        .replace(/"/g, '\\"')    // escape double quote
-        .replace(/\n/g, '\\n')   // escape newline
-        .replace(/\r/g, '\\r')   // escape carriage return
-        .replace(/\t/g, '\\t')   // escape tab
-        .replace(/[\x00-\x1F\x7F]/g, ''); // remove control characters
+    // Encode ke base64 untuk menghindari masalah escaping
+    return btoa(unescape(encodeURIComponent(str)));
 }
 
 function displayDailyNotes(filteredNotes = null) {
@@ -167,17 +160,24 @@ function displayDailyNotes(filteredNotes = null) {
         return;
     }
 
-    container.innerHTML = notes.map(note => `
+    container.innerHTML = notes.map(note => {
+        // Encode content ke base64 untuk menghindari masalah escaping
+        const encodedContent = escapeForAttribute(note.content);
+        const encodedTitle = escapeForAttribute(note.title);
+        
+        return `
         <div class="note-item">
             <div class="note-header">
                 <div class="note-date">
                     <i class="fas fa-calendar"></i> ${formatDate(note.date)}
                 </div>
                 <div class="note-actions">
-                    <button class="btn btn-sm btn-info" title="Lihat Isi Catatan" onclick="showNoteContent('${escapeForAttribute(note.title)}', '${escapeForAttribute(note.content)}')">
+                    <button class="btn btn-sm btn-info" title="Lihat Isi Catatan" 
+                        onclick="showNoteContent('${encodedTitle}', '${encodedContent}')">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn btn-sm btn-success" title="Salin Isi Catatan" onclick="copyNoteContent('${escapeForAttribute(note.content)}')">
+                    <button class="btn btn-sm btn-success" title="Salin Isi Catatan" 
+                        onclick="copyNoteContent('${encodedContent}')">
                         <i class="fas fa-copy"></i>
                     </button>
                     <button class="btn btn-sm btn-primary" onclick="editDailyNote(${note.id})">
@@ -190,13 +190,20 @@ function displayDailyNotes(filteredNotes = null) {
             </div>
             <h3>${escapeHTML(note.title)}</h3>
             <div class="note-content-preview">
-                <p>${escapeHTML(note.content).replace(/\n/g, '<br>')}</p>
+                <p>${truncateText(escapeHTML(note.content), 150)}</p>
             </div>
             <div class="note-meta">
                 <small class="text-muted">Dibuat: ${note.created}</small>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
+}
+
+// Fungsi untuk memotong teks dengan ellipsis
+function truncateText(text, maxLength) {
+    if (text.length <= maxLength) return text.replace(/\n/g, '<br>');
+    return text.substring(0, maxLength).replace(/\n/g, '<br>') + '...';
 }
 
 function displayDebtNotes(filteredNotes = null) {
@@ -208,17 +215,23 @@ function displayDebtNotes(filteredNotes = null) {
         return;
     }
 
-    container.innerHTML = notes.map(note => `
+    container.innerHTML = notes.map(note => {
+        const encodedPerson = escapeForAttribute(note.person);
+        const encodedDesc = note.desc ? escapeForAttribute(note.desc) : '';
+        
+        return `
         <div class="note-item">
             <div class="note-header">
                 <div class="debt-status ${note.status === 'paid' ? 'status-paid' : 'status-pending'}">
                     ${note.status === 'paid' ? 'LUNAS' : 'BELUM LUNAS'}
                 </div>
                 <div class="note-actions">
-                    <button class="btn btn-sm btn-info" title="Lihat Detail" onclick="showNoteContent('${note.type === 'hutang' ? 'Hutang' : 'Piutang'} - ${escapeForAttribute(note.person)}', '${escapeForAttribute(debtNoteFullContent(note))}')">
+                    <button class="btn btn-sm btn-info" title="Lihat Detail" 
+                        onclick="showNoteContent('${note.type === 'hutang' ? 'Hutang' : 'Piutang'} - ${encodedPerson}', '${escapeForAttribute(debtNoteFullContent(note))}')">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn btn-sm btn-success" title="Salin Detail" onclick="copyNoteContent('${escapeForAttribute(debtNoteFullContent(note))}')">
+                    <button class="btn btn-sm btn-success" title="Salin Detail" 
+                        onclick="copyNoteContent('${escapeForAttribute(debtNoteFullContent(note))}')">
                         <i class="fas fa-copy"></i>
                     </button>
                     <button class="btn btn-sm ${note.status === 'paid' ? 'btn-danger' : 'btn-success'}" onclick="toggleDebtStatus(${note.id})">
@@ -236,16 +249,16 @@ function displayDebtNotes(filteredNotes = null) {
             <p><strong>Jumlah:</strong> Rp ${note.amount.toLocaleString('id-ID')}</p>
             <p><strong>Jenis:</strong> ${note.type === 'hutang' ? 'Hutang (Saya berhutang)' : 'Piutang (Saya berpiutang)'}</p>
             <div class="note-content-preview">
-                ${note.desc ? `<p><strong>Keterangan:</strong> ${escapeHTML(note.desc).replace(/\n/g, '<br>')}</p>` : ''}
+                ${note.desc ? `<p><strong>Keterangan:</strong> ${truncateText(escapeHTML(note.desc), 100)}</p>` : ''}
             </div>
             <div class="note-meta">
                 <small class="text-muted">Dibuat: ${note.created}</small>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
-// Fungsi untuk buat text lengkap hutang/piutang untuk show/copy
 function debtNoteFullContent(note) {
     let str = `Nama: ${note.person}\n` +
               `Jenis: ${note.type === 'hutang' ? 'Hutang (Saya berhutang)' : 'Piutang (Saya berpiutang)'}\n` +
@@ -295,48 +308,6 @@ function displayFreeNotes(filteredNotes = null) {
     `).join('');
 }
 
-function copyNoteContent(content) {
-    // Unescape content yang telah di-escape
-    let text = content
-        .replace(/\\n/g, '\n')
-        .replace(/\\r/g, '\r')
-        .replace(/\\t/g, '\t')
-        .replace(/\\"/g, '"')
-        .replace(/\\'/g, "'")
-        .replace(/\\\\/g, '\\');
-
-    // Gunakan textarea untuk konten yang sangat panjang
-    if (text.length > 1000) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.left = '-999999px';
-        textarea.style.top = '-999999px';
-        document.body.appendChild(textarea);
-        textarea.select();
-        
-        try {
-            document.execCommand('copy');
-            showNotification('Isi catatan berhasil disalin ke clipboard!');
-        } catch (err) {
-            showNotification('Gagal menyalin ke clipboard. Silakan salin manual.');
-        } finally {
-            document.body.removeChild(textarea);
-        }
-    } else {
-        // Gunakan navigator.clipboard API untuk konten pendek
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(() => {
-                showNotification('Isi catatan berhasil disalin ke clipboard!');
-            }).catch(() => {
-                fallbackCopyTextToClipboard(text);
-            });
-        } else {
-            fallbackCopyTextToClipboard(text);
-        }
-    }
-}
-
 function fallbackCopyTextToClipboard(text) {
     const temp = document.createElement('textarea');
     temp.value = text;
@@ -355,52 +326,96 @@ function fallbackCopyTextToClipboard(text) {
     document.body.removeChild(temp);
 }
 
-function showNoteContent(title, content) {
-    // Unescape content yang telah di-escape
-    let unescapedContent = content
-        .replace(/\\n/g, '\n')
-        .replace(/\\r/g, '\r')
-        .replace(/\\t/g, '\t')
-        .replace(/\\"/g, '"')
-        .replace(/\\'/g, "'")
-        .replace(/\\\\/g, '\\');
+function showNoteContent(encodedTitle, encodedContent) {
+    // Decode baik title maupun content
+    let decodedTitle, decodedContent;
     
-    document.getElementById('showNoteTitle').textContent = title;
+    try {
+        decodedTitle = decodeURIComponent(escape(atob(encodedTitle)));
+    } catch (e) {
+        decodedTitle = encodedTitle
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '\r')
+            .replace(/\\t/g, '\t')
+            .replace(/\\"/g, '"')
+            .replace(/\\'/g, "'")
+            .replace(/\\\\/g, '\\');
+    }
+    
+    try {
+        decodedContent = decodeURIComponent(escape(atob(encodedContent)));
+    } catch (e) {
+        decodedContent = encodedContent
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '\r')
+            .replace(/\\t/g, '\t')
+            .replace(/\\"/g, '"')
+            .replace(/\\'/g, "'")
+            .replace(/\\\\/g, '\\');
+    }
+    
+    document.getElementById('showNoteTitle').textContent = decodedTitle;
     const contentElement = document.getElementById('showNoteContent');
-    
-    // Bersihkan modal
     contentElement.innerHTML = '';
     
-    // Buat container scrollable untuk konten panjang
-    const scrollContainer = document.createElement('div');
-    scrollContainer.style.maxHeight = '60vh';
-    scrollContainer.style.overflowY = 'auto';
-    scrollContainer.style.padding = '10px';
-    scrollContainer.style.background = '#f8f9fa';
-    scrollContainer.style.borderRadius = '8px';
+    const textarea = document.createElement('textarea');
+    textarea.value = decodedContent;
+    textarea.style.width = '100%';
+    textarea.style.minHeight = '300px';
+    textarea.style.padding = '10px';
+    textarea.style.borderRadius = '5px';
+    textarea.style.border = '1px solid #ddd';
+    textarea.readOnly = true;
+    textarea.style.fontFamily = 'inherit';
+    textarea.style.fontSize = '0.95rem';
+    textarea.style.lineHeight = '1.6';
     
-    // Buat elemen pre dengan white-space preserved
-    const preElement = document.createElement('pre');
-    preElement.style.whiteSpace = 'pre-wrap';
-    preElement.style.wordWrap = 'break-word';
-    preElement.style.margin = '0';
-    preElement.style.fontFamily = 'inherit';
-    preElement.textContent = unescapedContent;
+    contentElement.appendChild(textarea);
     
-    scrollContainer.appendChild(preElement);
-    contentElement.appendChild(scrollContainer);
-    
-    // Tambahkan tombol copy
     const copyBtn = document.createElement('button');
     copyBtn.className = 'btn btn-primary';
     copyBtn.style.marginTop = '15px';
     copyBtn.innerHTML = '<i class="fas fa-copy"></i> Salin Konten';
     copyBtn.onclick = () => {
-        copyNoteContent(content);
+        textarea.select();
+        document.execCommand('copy');
+        showNotification('Konten berhasil disalin!');
     };
     contentElement.appendChild(copyBtn);
     
     document.getElementById('showNoteModal').style.display = 'block';
+}
+
+function copyNoteContent(encodedContent) {
+    // Decode dari base64
+    let content;
+    try {
+        content = decodeURIComponent(escape(atob(encodedContent)));
+    } catch (e) {
+        content = encodedContent
+            .replace(/\\n/g, '\n')
+            .replace(/\\r/g, '\r')
+            .replace(/\\t/g, '\t')
+            .replace(/\\"/g, '"')
+            .replace(/\\'/g, "'")
+            .replace(/\\\\/g, '\\');
+    }
+    
+    const textarea = document.createElement('textarea');
+    textarea.value = content;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+        document.execCommand('copy');
+        showNotification('Isi catatan berhasil disalin!');
+    } catch (err) {
+        showNotification('Gagal menyalin, silakan coba lagi');
+    } finally {
+        document.body.removeChild(textarea);
+    }
 }
 
 function closeShowNoteModal() {
